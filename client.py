@@ -2,7 +2,7 @@ import asyncio
 import getpass
 import json
 import os
-
+import random
 import websockets
 from mapa import Map
 
@@ -38,7 +38,22 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                 else:
                     # we got a current map state update
                     state = update
-
+                
+                # BRUTE FORCE GAMING : obviously not working by: andre
+                lado=random.random()
+                if lado<=0.25:
+                    key="w"
+                elif lado<=0.5:
+                    key="d"
+                elif lado<=0.75:
+                    key="s"
+                else:
+                    key="a"
+                
+                await websocket.send(
+                    json.dumps({"cmd": "key", "key": key})
+                )
+                
                 # Next lines are only for the Human Agent, the key values are nonetheless the correct ones!
                 key = ""
                 for event in pygame.event.get():
