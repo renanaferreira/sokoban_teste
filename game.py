@@ -127,6 +127,7 @@ class Game:
         # actually update map
         self.map.set_tile(npos, ctile)
         self.map.clear_tile(cur)
+        
         return True
 
     def update_keeper(self):

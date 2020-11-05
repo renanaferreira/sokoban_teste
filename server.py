@@ -29,6 +29,7 @@ Player = namedtuple("Player", ["name", "ws"])
 
 HIGHSCORE_FILE = "highscores.json"
 
+caminhos=[] # rede neural: (tile1, tile2, peso)
 
 class GameServer:
     """Network Game Server."""
