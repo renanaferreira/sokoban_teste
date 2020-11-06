@@ -43,5 +43,16 @@ class SokobanDomain(SearchDomain):
     def satisfies(self, state, goal):
     #Precisa garantir que cada box_position equivala a uma goal_position, e apenas uma
         boxes = state["boxes"]
-        for box 
-        return 
+        objs = goal
+        count = 0
+        for box in state["boxes"]:
+            for obj in goal:
+                (bx, by) = box
+                (ox, oy) = obj
+                if bx == ox and by == oy:
+                    count += 1
+                    objs.remove(obj)
+                    boxes.remove(box)
+        if len(boxes) == 0 and len(objs) == 0 and count == len(goal):
+            return True
+        return False
