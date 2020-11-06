@@ -110,3 +110,6 @@ venv.bak/
 #bomberman files
 *.score
 .DS_Store
+
+#Renan personal Files
+tmp*
