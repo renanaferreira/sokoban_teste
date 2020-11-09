@@ -80,7 +80,7 @@ class SearchNode:
         return state01 or state02
 
     def __str__(self):
-        return f"no({str(self.state)},{str(self.parent)},{str(self.depth)})"
+        return f"no({str(self.state)},{str(self.parent)},{str(self.depth)}, {str(self.action)})"
     def __repr__(self):
         return str(self)
 
@@ -121,9 +121,9 @@ class SearchTree:
     # obter o caminho (sequencia de estados) da raiz ate um no
     def get_path(self,node):
         if node.parent == None:
-            return [node]
+            return [node.state]
         path = self.get_path(node.parent)
-        path += [node]
+        path += [node.state]
         return(path)
 
     def get_plan(self,node):
