@@ -40,8 +40,7 @@ class Client:
                         game_properties = update
                         mapa = Map(update["map"])
                         solver = self.sokobanSolver(update["map"])
-                        solver.search()
-                        self.plan = solver.get_plan(solver.solution)
+                        self.plan = solver.search()
                         print(self.plan)
                     else:
                         # we got a current map state update
@@ -49,7 +48,7 @@ class Client:
                     
                     if self.plan == []:
                         break
-                    key = self.plan[0]
+                    key = self.plan[0].action
                     self.plan = self.plan[1:]
                     
                     await websocket.send(

@@ -121,9 +121,9 @@ class SearchTree:
     # obter o caminho (sequencia de estados) da raiz ate um no
     def get_path(self,node):
         if node.parent == None:
-            return [node.state]
+            return [node]
         path = self.get_path(node.parent)
-        path += [node.state]
+        path += [node]
         return(path)
 
     def get_plan(self,node):
