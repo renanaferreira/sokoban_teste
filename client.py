@@ -5,11 +5,24 @@ import os
 import random
 import websockets
 from mapa import Map
+from tree_search import *
+import mapa
+from sokoban_domain import SokobanDomain
+from consts import Tiles, TILES
 
 class Client:
     def __init__(self, addr, name):
         self.server_address=addr
         self.agent_name=name
+        self.plan = None
+
+    def sokobanSolver(self, filename):
+        p = SokobanDomain(filename)
+        mapa = Map(p.level)
+        initial = {"player": mapa.keeper,"boxes": mapa.boxes}
+        goal = {"boxes": mapa.filter_tiles([Tiles.MAN_ON_GOAL, Tiles.BOX_ON_GOAL, Tiles.GOAL])}
+        problema = SearchProblem(p, initial, goal)
+        return SearchTree(problema, 'breadth')
 
     async def agent_loop(self, server_address, agent_name):
         async with websockets.connect(f"ws://{server_address}/player") as websocket:
@@ -26,20 +39,18 @@ class Client:
                         # we got a new level
                         game_properties = update
                         mapa = Map(update["map"])
+                        solver = self.sokobanSolver(update["map"])
+                        solver.search()
+                        self.plan = solver.get_plan(solver.solution)
+                        print(self.plan)
                     else:
                         # we got a current map state update
                         state = update
                     
-                    # BRUTE FORCE GAMING : obviously not working by: andre
-                    lado=random.random()
-                    if lado<=0.25:
-                        key="w"
-                    elif lado<=0.5:
-                        key="d"
-                    elif lado<=0.75:
-                        key="s"
-                    else:
-                        key="a"
+                    if self.plan == []:
+                        break
+                    key = self.plan[0]
+                    self.plan = self.plan[1:]
                     
                     await websocket.send(
                         json.dumps({"cmd": "key", "key": key})
@@ -58,3 +69,4 @@ if __name__=="__main__":
     PORT = os.environ.get("PORT", "8000")
     NAME = os.environ.get("NAME", getpass.getuser())
     loop.run_until_complete(c.agent_loop(f"{SERVER}:{PORT}", NAME))
+    
