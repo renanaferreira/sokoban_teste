@@ -14,6 +14,14 @@
 
 from abc import ABC, abstractmethod
 
+def compareStates(state01, state02):
+    if(state01["player"] != state02["player"]):
+        return False
+    for box in state01["boxes"]:
+        if box not in state02["boxes"]:
+            return False
+    return True
+
 # Dominios de pesquisa
 # Permitem calcular
 # as accoes possiveis em cada estado, etc
@@ -75,9 +83,9 @@ class SearchNode:
     def in_parent(self, state):
         if self.parent == None:
             return False
-        state01 = (self.parent.state == state)
-        state02 = self.parent.in_parent(state)
-        return state01 or state02
+        into = (compareStates(state, self.parent.state)) or (self.parent.in_parent(state))
+        if into: print(self.state, " - ", state)
+        return into
 
     def __str__(self):
         return f"no({str(self.state)},{str(self.depth)}, {str(self.action)})"
@@ -117,7 +125,6 @@ class SearchTree:
             return self.get_plan(self.solution)
         return None
 
-
     # obter o caminho (sequencia de estados) da raiz ate um no
     def get_path(self,node):
         if node.parent == None:
@@ -136,13 +143,10 @@ class SearchTree:
     # procurar a solucao
     def search(self, limit=None):
         while self.open_nodes != []:
-            print("//");print(self.open_nodes)
             node = self.open_nodes.pop(0)
             self.non_terminals+=1
             self.terminals=len(self.open_nodes)
             if self.problem.goal_test(node.state):
-                print("entrou")
-                print(node.state)
                 self.solution = node
                 self.avg_ramification = (self.terminals+self.non_terminals-1)/self.non_terminals
                 return self.get_path(node)
@@ -154,7 +158,6 @@ class SearchTree:
                 if not node.in_parent(newstate) and (limit is None or newnode.depth <= limit):
                     lnewnodes.append(newnode)        
             self.add_to_open(lnewnodes)
-        print("acab")
         return None
 
     # juntar novos nos a lista de nos abertos de acordo com a estrategia

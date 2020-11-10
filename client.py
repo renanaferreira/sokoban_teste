@@ -10,19 +10,20 @@ import mapa
 from sokoban_domain import SokobanDomain
 from consts import Tiles, TILES
 
+
+def sokobanSolver(filename):
+        p = SokobanDomain(filename)
+        mapa = Map(filename)
+        initial = {"player": mapa.keeper, "boxes": mapa.boxes}
+        goal = {"boxes": mapa.filter_tiles([Tiles.MAN_ON_GOAL, Tiles.BOX_ON_GOAL, Tiles.GOAL])}
+        problema = SearchProblem(p, initial, goal)
+        return SearchTree(problema, 'depth')
+
 class Client:
     def __init__(self, addr, name):
         self.server_address=addr
         self.agent_name=name
         self.plan = None
-
-    def sokobanSolver(self, filename):
-        p = SokobanDomain(filename)
-        mapa = Map(filename)
-        initial = {"player": mapa.keeper,"boxes": mapa.boxes}
-        goal = {"boxes": mapa.filter_tiles([Tiles.MAN_ON_GOAL, Tiles.BOX_ON_GOAL, Tiles.GOAL])}
-        problema = SearchProblem(p, initial, goal)
-        return SearchTree(problema, 'depth')
 
     async def agent_loop(self, server_address, agent_name):
         async with websockets.connect(f"ws://{server_address}/player") as websocket:
@@ -39,7 +40,7 @@ class Client:
                         # we got a new level
                         game_properties = update
                         mapa = Map(update["map"])
-                        solver = self.sokobanSolver(update["map"])
+                        solver = sokobanSolver(update["map"])
                         p = solver.search()
                         if(p is None):
                             break
@@ -65,10 +66,15 @@ class Client:
 # You can change the default values using the command line, example:
 # $ NAME='arrumador' python3 client.py
 if __name__=="__main__":
-    c=Client("localhost:8000", "student")
-    loop = asyncio.get_event_loop()
-    SERVER = os.environ.get("SERVER", "localhost")
-    PORT = os.environ.get("PORT", "8000")
-    NAME = os.environ.get("NAME", getpass.getuser())
-    loop.run_until_complete(c.agent_loop(f"{SERVER}:{PORT}", NAME))
+    #c=Client("localhost:8000", "student")
+    #loop = asyncio.get_event_loop()
+    #SERVER = os.environ.get("SERVER", "localhost")
+    #PORT = os.environ.get("PORT", "8000")
+    #NAME = os.environ.get("NAME", getpass.getuser())
+    #loop.run_until_complete(c.agent_loop(f"{SERVER}:{PORT}", NAME))
+    solver = sokobanSolver("levels/1.xsb")
+    p = solver.search(limit=5)
+    print(p)
+    #self.plan = solver.get_plan(solver.solution)
+    #print(self.plan)
     
