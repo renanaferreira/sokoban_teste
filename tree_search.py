@@ -140,6 +140,8 @@ class SearchTree:
             self.non_terminals+=1
             self.terminals=len(self.open_nodes)
             if self.problem.goal_test(node.state):
+                print("entrou")
+                print(node.state)
                 self.solution = node
                 self.avg_ramification = (self.terminals+self.non_terminals-1)/self.non_terminals
                 return self.get_path(node)

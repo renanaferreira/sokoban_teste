@@ -18,11 +18,11 @@ class Client:
 
     def sokobanSolver(self, filename):
         p = SokobanDomain(filename)
-        mapa = Map(p.level)
+        mapa = Map(filename)
         initial = {"player": mapa.keeper,"boxes": mapa.boxes}
         goal = {"boxes": mapa.filter_tiles([Tiles.MAN_ON_GOAL, Tiles.BOX_ON_GOAL, Tiles.GOAL])}
         problema = SearchProblem(p, initial, goal)
-        return SearchTree(problema, 'breadth')
+        return SearchTree(problema, 'uniform')
 
     async def agent_loop(self, server_address, agent_name):
         async with websockets.connect(f"ws://{server_address}/player") as websocket:
@@ -40,7 +40,10 @@ class Client:
                         game_properties = update
                         mapa = Map(update["map"])
                         solver = self.sokobanSolver(update["map"])
-                        self.plan = solver.search()
+                        p = solver.search(limit=10)
+                        if(p is None):
+                            break
+                        self.plan = solver.get_plan(solver.solution)
                         print(self.plan)
                     else:
                         # we got a current map state update
@@ -48,7 +51,7 @@ class Client:
                     
                     if self.plan == []:
                         break
-                    key = self.plan[0].action
+                    key = self.plan[0]
                     self.plan = self.plan[1:]
                     
                     await websocket.send(
