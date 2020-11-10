@@ -20,6 +20,9 @@ def compareStates(state01, state02):
     for box in state01["boxes"]:
         if box not in state02["boxes"]:
             return False
+    for box in state02["boxes"]:
+        if box not in state01["boxes"]:
+            return False
     return True
 
 # Dominios de pesquisa
@@ -84,7 +87,6 @@ class SearchNode:
         if self.parent == None:
             return False
         into = (compareStates(state, self.parent.state)) or (self.parent.in_parent(state))
-        if into: print(self.state, " - ", state)
         return into
 
     def __str__(self):
@@ -156,6 +158,7 @@ class SearchTree:
                 newnode = SearchNode(newstate,node, node.depth+1, node.cost+self.problem.domain.cost(node.state, a),
                                              self.problem.domain.heuristic(newstate,self.problem.goal), a)
                 if not node.in_parent(newstate) and (limit is None or newnode.depth <= limit):
+                    print("result - ",node.state," - ",a," - ",newstate)
                     lnewnodes.append(newnode)        
             self.add_to_open(lnewnodes)
         return None

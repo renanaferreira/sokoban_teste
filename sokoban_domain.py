@@ -3,8 +3,10 @@ from math import hypot
 from mapa import Map
 from consts import Tiles, TILES
 
-
-
+def minimal_distance(pos1, pos2):
+    x1, y1 = pos1
+    x2, y2 = pos2
+    return hypot(x1-x2, y1-y2)
 
 #state = 
 #action = "WASD"
@@ -34,7 +36,6 @@ class SokobanDomain(SearchDomain):
             if(self.can_move(self.map.keeper, direction)): 
                 actions += [direction]
         self.emptyMap()
-        print("actions ",state, " - ", actions)
         return actions
 
     def can_move(self, cur, direction):
@@ -106,18 +107,21 @@ class SokobanDomain(SearchDomain):
         newstate["player"] = self.map.keeper
         newstate["boxes"]  = self.map.boxes
         self.emptyMap()
-        print("result - ",state," - ",action," - ",newstate)
         return newstate
         
 
     def cost(self, state, action):
-        return 0
+        return 1
 
     def heuristic(self, state, goal): 
-        return 0
+        sum = 0
+        list1 = state["boxes"]
+        list2 = goal["boxes"]
+        for i in range(len(list1)):
+            sum += minimal_distance(list1[i],list2[i])
+        return sum
+
 
     def satisfies(self, state, goal):
-        for box in state["boxes"]:
-            if box not in goal["boxes"]:
-                return False
-        return True
+        self.fillMap(state)
+        return self.map.completed

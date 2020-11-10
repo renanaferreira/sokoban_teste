@@ -17,7 +17,7 @@ def sokobanSolver(filename):
         initial = {"player": mapa.keeper, "boxes": mapa.boxes}
         goal = {"boxes": mapa.filter_tiles([Tiles.MAN_ON_GOAL, Tiles.BOX_ON_GOAL, Tiles.GOAL])}
         problema = SearchProblem(p, initial, goal)
-        return SearchTree(problema, 'depth')
+        return SearchTree(problema, 'a*')
 
 class Client:
     def __init__(self, addr, name):
@@ -72,8 +72,8 @@ if __name__=="__main__":
     #PORT = os.environ.get("PORT", "8000")
     #NAME = os.environ.get("NAME", getpass.getuser())
     #loop.run_until_complete(c.agent_loop(f"{SERVER}:{PORT}", NAME))
-    solver = sokobanSolver("levels/1.xsb")
-    p = solver.search(limit=5)
+    solver = sokobanSolver("levels/0.xsb")
+    p = solver.search()
     print(p)
     #self.plan = solver.get_plan(solver.solution)
     #print(self.plan)
