@@ -22,7 +22,7 @@ class Client:
         initial = {"player": mapa.keeper,"boxes": mapa.boxes}
         goal = {"boxes": mapa.filter_tiles([Tiles.MAN_ON_GOAL, Tiles.BOX_ON_GOAL, Tiles.GOAL])}
         problema = SearchProblem(p, initial, goal)
-        return SearchTree(problema, 'uniform')
+        return SearchTree(problema, 'depth')
 
     async def agent_loop(self, server_address, agent_name):
         async with websockets.connect(f"ws://{server_address}/player") as websocket:
@@ -40,7 +40,7 @@ class Client:
                         game_properties = update
                         mapa = Map(update["map"])
                         solver = self.sokobanSolver(update["map"])
-                        p = solver.search(limit=10)
+                        p = solver.search()
                         if(p is None):
                             break
                         self.plan = solver.get_plan(solver.solution)

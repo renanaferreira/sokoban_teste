@@ -80,7 +80,7 @@ class SearchNode:
         return state01 or state02
 
     def __str__(self):
-        return f"no({str(self.state)},{str(self.parent)},{str(self.depth)}, {str(self.action)})"
+        return f"no({str(self.state)},{str(self.depth)}, {str(self.action)})"
     def __repr__(self):
         return str(self)
 
@@ -136,6 +136,7 @@ class SearchTree:
     # procurar a solucao
     def search(self, limit=None):
         while self.open_nodes != []:
+            print("//");print(self.open_nodes)
             node = self.open_nodes.pop(0)
             self.non_terminals+=1
             self.terminals=len(self.open_nodes)
@@ -153,6 +154,7 @@ class SearchTree:
                 if not node.in_parent(newstate) and (limit is None or newnode.depth <= limit):
                     lnewnodes.append(newnode)        
             self.add_to_open(lnewnodes)
+        print("acab")
         return None
 
     # juntar novos nos a lista de nos abertos de acordo com a estrategia
