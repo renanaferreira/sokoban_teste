@@ -125,3 +125,9 @@ class SokobanDomain(SearchDomain):
     def satisfies(self, state, goal):
         self.fillMap(state)
         return self.map.completed
+    
+    def satisfies_box(self, box, goal):
+        boxes=goal["boxes"];
+        if box in boxes:
+            return True
+        return False

@@ -13,6 +13,7 @@
 #  Inteligência Artificial, 2014-2019
 
 from abc import ABC, abstractmethod
+import random
 
 def compareStates(state01, state02):
     if(state01["player"] != state02["player"]):
@@ -72,6 +73,9 @@ class SearchProblem:
     def goal_test(self, state):
         return self.domain.satisfies(state,self.goal)
 
+    def goal_box(self, box):
+        return self.domain.satisfies_box(box, self.goal)
+
 # Nos de uma arvore de pesquisa
 class SearchNode:
     def __init__(self,state,parent, depth, cost, heuristic=0, action=None): 
@@ -98,7 +102,7 @@ class SearchNode:
 class SearchTree:
 
     # construtor
-    def __init__(self,problem, strategy='breadth'): 
+    def __init__(self,problem, strategy='breadth', mapp=None): 
         self.problem = problem
         root = SearchNode(problem.initial, None, 0, 0, self.problem.domain.heuristic(
             self.problem.initial, self.problem.goal))
@@ -108,6 +112,7 @@ class SearchTree:
         self.terminals = 1
         self.non_terminals = 0
         self.avg_ramification = None
+        self.map=mapp
 
     @property
     def length(self):
@@ -153,14 +158,23 @@ class SearchTree:
                 self.avg_ramification = (self.terminals+self.non_terminals-1)/self.non_terminals
                 return self.get_path(node)
             lnewnodes = []
-            for a in self.problem.domain.actions(node.state):
+
+            shuffleActions = self.problem.domain.actions(node.state)
+            random.shuffle(shuffleActions);
+            for a in shuffleActions:
+                # newstate = posição das caixas
                 newstate = self.problem.domain.result(node.state,a)
+
+                if self.encurralado(newstate["boxes"]):
+                    continue
+                
                 newnode = SearchNode(newstate,node, node.depth+1, node.cost+self.problem.domain.cost(node.state, a),
                                              self.problem.domain.heuristic(newstate,self.problem.goal), a)
                 if not node.in_parent(newstate) and (limit is None or newnode.depth <= limit):
                     print("result - ",node.state," - ",a," - ",newstate)
                     lnewnodes.append(newnode)        
             self.add_to_open(lnewnodes)
+
         return None
 
     # juntar novos nos a lista de nos abertos de acordo com a estrategia
@@ -179,4 +193,37 @@ class SearchTree:
             self.open_nodes.extend(lnewnodes)
             self.open_nodes.sort(key = lambda node: node.heuristic + node.cost)
 
+    def encurralado(self, boxes):
+        for x in boxes:
+            if self.problem.goal_box(x):
+                continue
+            caixa_x = x[0]
+            caixa_y = x[1]
 
+            pos_m_n=(caixa_x-1, caixa_y)
+            pos_n_m=(caixa_x, caixa_y-1)
+
+            pos_p_n=(caixa_x+1, caixa_y)
+            pos_n_p=(caixa_x, caixa_y+1)
+
+            pos_p_n=(caixa_x+1, caixa_y)
+            pos_n_m=(caixa_x, caixa_y-1)
+
+            pos_m_n=(caixa_x-1, caixa_y)
+            pos_n_p=(caixa_x, caixa_y+1)
+
+            if self.map.is_blocked(pos_m_n) and self.map.is_blocked(pos_n_m):
+                return True
+
+            if self.map.is_blocked(pos_p_n) and self.map.is_blocked(pos_n_p):
+                return True
+
+            if self.map.is_blocked(pos_p_n) and self.map.is_blocked(pos_n_m):
+                return True
+
+            if self.map.is_blocked(pos_m_n) and self.map.is_blocked(pos_n_p):
+                return True
+        
+        return False
+
+            

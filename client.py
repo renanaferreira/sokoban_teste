@@ -17,7 +17,7 @@ def sokobanSolver(filename):
         initial = {"player": mapa.keeper, "boxes": mapa.boxes}
         goal = {"boxes": mapa.filter_tiles([Tiles.MAN_ON_GOAL, Tiles.BOX_ON_GOAL, Tiles.GOAL])}
         problema = SearchProblem(p, initial, goal)
-        return SearchTree(problema, 'a*')
+        return SearchTree(problema, 'a*', mapa)
 
 class Client:
     def __init__(self, addr, name):
@@ -35,7 +35,7 @@ class Client:
                     update = json.loads(
                         await websocket.recv()
                     )  # receive game update, this must be called timely or your game will get out of sync with the server
-
+                    
                     if "map" in update:
                         # we got a new level
                         game_properties = update
@@ -46,6 +46,7 @@ class Client:
                             break
                         self.plan = solver.get_plan(solver.solution)
                         print(self.plan)
+                        print("conseguiu")
                     else:
                         # we got a current map state update
                         state = update
@@ -66,15 +67,20 @@ class Client:
 # You can change the default values using the command line, example:
 # $ NAME='arrumador' python3 client.py
 if __name__=="__main__":
-    #c=Client("localhost:8000", "student")
-    #loop = asyncio.get_event_loop()
-    #SERVER = os.environ.get("SERVER", "localhost")
-    #PORT = os.environ.get("PORT", "8000")
-    #NAME = os.environ.get("NAME", getpass.getuser())
-    #loop.run_until_complete(c.agent_loop(f"{SERVER}:{PORT}", NAME))
-    solver = sokobanSolver("levels/0.xsb")
+    c=Client("localhost:8001", "student")
+    loop = asyncio.get_event_loop()
+    SERVER = os.environ.get("SERVER", "localhost")
+    PORT = os.environ.get("PORT", "8001")
+    NAME = os.environ.get("NAME", getpass.getuser())
+    loop.run_until_complete(c.agent_loop(f"{SERVER}:{PORT}", NAME))
+
+    """
+    solver = sokobanSolver("levels/1.xsb")
     p = solver.search()
     print(p)
-    #self.plan = solver.get_plan(solver.solution)
-    #print(self.plan)
+    if p is not None:
+        plan = solver.get_plan(solver.solution)
+        print(plan)
+    """
+    
     
