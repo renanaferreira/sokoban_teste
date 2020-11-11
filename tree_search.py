@@ -164,7 +164,6 @@ class SearchTree:
             for a in shuffleActions:
                 # newstate = posição das caixas
                 newstate = self.problem.domain.result(node.state,a)
-
                 if self.encurralado(newstate["boxes"]):
                     continue
                 

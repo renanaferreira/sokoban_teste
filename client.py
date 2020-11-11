@@ -46,7 +46,6 @@ class Client:
                             break
                         self.plan = solver.get_plan(solver.solution)
                         print(self.plan)
-                        print("conseguiu")
                     else:
                         # we got a current map state update
                         state = update
@@ -75,7 +74,7 @@ if __name__=="__main__":
     loop.run_until_complete(c.agent_loop(f"{SERVER}:{PORT}", NAME))
 
     """
-    solver = sokobanSolver("levels/1.xsb")
+    solver = sokobanSolver("levels/5.xsb")
     p = solver.search()
     print(p)
     if p is not None:
