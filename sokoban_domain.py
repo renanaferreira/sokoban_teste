@@ -8,34 +8,44 @@ def minimal_distance(pos1, pos2):
     x2, y2 = pos2
     return hypot(x1-x2, y1-y2)
 
-#state = 
-#action = "WASD"
+
 class SokobanDomain(SearchDomain):
     def __init__(self, filename):
-        self.level = filename
-        self.map = Map(filename)
-        self.states = []
-        self.emptyMap()   
+        self.change_map(filename)
 
-    def fillMap(self, state):
+    
+    def toggle_map(self, state=None):
+        if(state != None):
+            self.fill_map(self, state)
+        else:
+            self.emptyMap()
+
+
+    def fill_map(self, state):
         for box in state["boxes"]:
             self.map.set_tile(box, Tiles.BOX)
         self.map.set_tile(state["player"], Tiles.MAN)
 
-    def emptyMap(self):
+    def empty_map(self):
         self.map.clear_tile(self.map.keeper)
         boxs = self.map.boxes
         for box in boxs:
             self.map.clear_tile(box)
 
+    def change_map(self, filename):
+        self.level = filename
+        self.map = Map(filename)
+        self.states = []
+        self.is_empty = False
+        self.toogle_map()
 
     def actions(self,state):
-        self.fillMap(state)
+        self.toggle_map(state)
         actions = []
         for direction in ["w","a","s","d"]:
             if(self.can_move(self.map.keeper, direction)): 
                 actions += [direction]
-        self.emptyMap()
+        self.toggle_map()
         return actions
 
     def can_move(self, cur, direction):
@@ -101,12 +111,15 @@ class SokobanDomain(SearchDomain):
         return True
 
     def result(self,state,action):
-        self.fillMap(state)
+        goal = self.map.empty_goals
+        self.toggle_map(state)
         self.move(self.map.keeper, action)
         newstate = {}
         newstate["player"] = self.map.keeper
         newstate["boxes"]  = self.map.boxes
-        self.emptyMap()
+        self.toggle_map()
+        if(self.trapped(newstate, goal)):
+            return None
         return newstate
         
 
@@ -123,11 +136,38 @@ class SokobanDomain(SearchDomain):
 
 
     def satisfies(self, state, goal):
-        self.fillMap(state)
+        self.toggle_map(state)
         return self.map.completed
     
-    def satisfies_box(self, box, goal):
-        boxes=goal["boxes"];
-        if box in boxes:
+    def goal_box(self, box, goal):
+        if box in goal["boxes"]:
             return True
+        return False
+
+    def trapped(self, state, goal):
+        for box in state["boxes"]:
+            if self.goal_box(x, goal):
+                continue
+            (x, y) = box
+
+            pos_m_n=(x-1, y)
+            pos_n_m=(x, y-1)
+            if self.map.is_blocked(pos_m_n) and self.map.is_blocked(pos_n_m):
+                return True
+
+            pos_p_n=(x+1, y)
+            pos_n_p=(x, y+1)
+            if self.map.is_blocked(pos_p_n) and self.map.is_blocked(pos_n_p):
+                return True
+
+            pos_p_n=(x+1, y)
+            pos_n_m=(x, y-1)
+            if self.map.is_blocked(pos_p_n) and self.map.is_blocked(pos_n_m):
+                return True
+
+            pos_m_n=(x-1, y)
+            pos_n_p=(x, y+1)
+            if self.map.is_blocked(pos_m_n) and self.map.is_blocked(pos_n_p):
+                return True
+        
         return False

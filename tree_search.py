@@ -160,7 +160,7 @@ class SearchTree:
             lnewnodes = []
 
             shuffleActions = self.problem.domain.actions(node.state)
-            random.shuffle(shuffleActions);
+            random.shuffle(shuffleActions)
             for a in shuffleActions:
                 # newstate = posição das caixas
                 newstate = self.problem.domain.result(node.state,a)
