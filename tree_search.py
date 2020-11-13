@@ -192,38 +192,3 @@ class SearchTree:
         elif self.strategy == 'a*':
             self.open_nodes.extend(lnewnodes)
             self.open_nodes.sort(key = lambda node: node.heuristic + node.cost)
-
-    def encurralado(self, boxes):
-        for x in boxes:
-            if self.problem.goal_box(x):
-                continue
-            caixa_x = x[0]
-            caixa_y = x[1]
-
-            pos_m_n=(caixa_x-1, caixa_y)
-            pos_n_m=(caixa_x, caixa_y-1)
-
-            pos_p_n=(caixa_x+1, caixa_y)
-            pos_n_p=(caixa_x, caixa_y+1)
-
-            pos_p_n=(caixa_x+1, caixa_y)
-            pos_n_m=(caixa_x, caixa_y-1)
-
-            pos_m_n=(caixa_x-1, caixa_y)
-            pos_n_p=(caixa_x, caixa_y+1)
-
-            if self.map.is_blocked(pos_m_n) and self.map.is_blocked(pos_n_m):
-                return True
-
-            if self.map.is_blocked(pos_p_n) and self.map.is_blocked(pos_n_p):
-                return True
-
-            if self.map.is_blocked(pos_p_n) and self.map.is_blocked(pos_n_m):
-                return True
-
-            if self.map.is_blocked(pos_m_n) and self.map.is_blocked(pos_n_p):
-                return True
-        
-        return False
-
-            

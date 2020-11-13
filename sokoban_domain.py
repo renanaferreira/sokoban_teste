@@ -55,8 +55,10 @@ class SokobanDomain(SearchDomain):
             return None
         if mapa.get_tile(npos) in [Tiles.BOX,Tiles.BOX_ON_GOAL,]:  # next position has a box?
             if ctile & Tiles.MAN == Tiles.MAN:  # if you are the keeper you can push
-                if self.move(mapa, npos, direction) is None:  # as long as the pushed box can move
+                newmap = self.move(mapa, npos, direction)
+                if newmap is None:  # as long as the pushed box can move
                     return None
+                mapa = newmap # I am afraid I was passing by value
             else:  # you are not the Keeper, so no pushing
                 return None
 
