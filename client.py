@@ -24,6 +24,7 @@ class Client:
         self.server_address=addr
         self.agent_name=name
         self.plan = None
+        self.solver = None
 
     async def agent_loop(self, server_address, agent_name):
         async with websockets.connect(f"ws://{server_address}/player") as websocket:
@@ -40,11 +41,18 @@ class Client:
                         # we got a new level
                         game_properties = update
                         mapa = Map(update["map"])
-                        solver = sokobanSolver(update["map"])
-                        p = solver.search()
-                        if(p is None):
-                            break
-                        self.plan = solver.get_plan(solver.solution)
+                        if(self.solver is None):
+                            self.solver = sokobanSolver(update["map"])
+                        else:
+                            self.solver.problem.domain.change_map(update["map"])
+                        p = self.solver.search()
+                        self.plan = self.solver.get_plan(self.solver.solution)
+                        player = []
+                        for i in range(len(p)):
+                            state = p[i]
+                            (x,y) = state["player"]
+                            player.append((x+1,y+1))
+                        print(player)
                         print(self.plan)
                     else:
                         # we got a current map state update

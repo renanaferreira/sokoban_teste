@@ -149,8 +149,10 @@ class SearchTree:
 
     # procurar a solucao
     def search(self, limit=None):
+        count = 0
         while self.open_nodes != []:
             node = self.open_nodes.pop(0)
+            print(count); count += 1
             self.non_terminals+=1
             self.terminals=len(self.open_nodes)
             if self.problem.goal_test(node.state):
@@ -160,17 +162,16 @@ class SearchTree:
             lnewnodes = []
 
             shuffleActions = self.problem.domain.actions(node.state)
-            random.shuffle(shuffleActions);
+            random.shuffle(shuffleActions)
             for a in shuffleActions:
                 # newstate = posição das caixas
                 newstate = self.problem.domain.result(node.state,a)
-                if self.encurralado(newstate["boxes"]):
+                if newstate == None:
                     continue
                 
                 newnode = SearchNode(newstate,node, node.depth+1, node.cost+self.problem.domain.cost(node.state, a),
                                              self.problem.domain.heuristic(newstate,self.problem.goal), a)
                 if not node.in_parent(newstate) and (limit is None or newnode.depth <= limit):
-                    print("result - ",node.state," - ",a," - ",newstate)
                     lnewnodes.append(newnode)        
             self.add_to_open(lnewnodes)
 
