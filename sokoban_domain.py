@@ -33,39 +33,35 @@ class SokobanDomain(SearchDomain):
             return None
         return {"player": mapa.keeper, "boxes": mapa.boxes}
 
-    def move(self, mapa, cur, direction):
-        """Move an entity in the game."""
-        assert direction in "wasd", f"Can't move in {direction} direction"
-
-        cx, cy = cur
+    def move(self, mapa, cur, action):        
         ctile = mapa.get_tile(cur)
-
-        npos = cur
-        if direction == "w":
-            npos = cx, cy - 1
-        if direction == "a":
-            npos = cx - 1, cy
-        if direction == "s":
-            npos = cx, cy + 1
-        if direction == "d":
-            npos = cx + 1, cy
-
-        # test blocked
+        npos = mapa.new_pos(cur, action)
         if mapa.is_blocked(npos):
             return None
-        if mapa.get_tile(npos) in [Tiles.BOX,Tiles.BOX_ON_GOAL,]:  # next position has a box?
-            if ctile & Tiles.MAN == Tiles.MAN:  # if you are the keeper you can push
-                newmap = self.move(mapa, npos, direction)
-                if newmap is None:  # as long as the pushed box can move
+        if mapa.is_box(npos):  
+            if mapa.is_man_2(ctile):  
+                newmap = self.move(mapa, npos, action)
+                if newmap is None:  
                     return None
-                mapa = newmap # I am afraid I was passing by value
-            else:  # you are not the Keeper, so no pushing
+                mapa = newmap 
+            else:  
                 return None
-
-        # actually update map
         mapa.set_tile(npos, ctile)
         mapa.clear_tile(cur)
-        
+        return mapa
+
+    def move2(self, mapa, action):      
+        player =  mapa.keeper
+        npos = mapa.new_pos(player, action)
+        if mapa.is_blocked(npos):
+            return None
+        if mapa.is_box(npos):
+            npos2 = mapa.new_pos(npos, action)
+            if mapa.is_blocked(npos2) or mapa.is_box(npos2):
+                return None
+            mapa.set_tile(npos2, Tiles.BOX)
+            mapa.clear_tile(npos)
+        mapa.move_man(npos)
         return mapa
 
     def trapped(self, state):
@@ -103,7 +99,8 @@ class SokobanDomain(SearchDomain):
 
     def result(self,state,action):
         mapa = self.instantiate_map(state)
-        newstate = self.get_state(self.move(mapa,state["player"], action))
+        #newstate = self.get_state(self.move(mapa,state["player"], action))
+        newstate = self.get_state(self.move2(mapa, action))
         if(self.trapped(newstate)):
             return None
         return newstate

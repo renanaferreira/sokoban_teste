@@ -120,10 +120,7 @@ class Map:
         self._map[y][x] = (
             tile & 0b1110 | self._map[y][x]
         )  # the 0b1110 mask avoid carring ON_GOAL to new tiles
-
-        if (
-            tile & Tiles.MAN == Tiles.MAN
-        ):  # hack to avoid continuous searching for keeper
+        if (self.is_man_2(tile)):  # hack to avoid continuous searching for keeper
             self._keeper = pos
 
     def clear_tile(self, pos):
@@ -142,6 +139,36 @@ class Map:
             return True
         return False
 
+    def is_man(self, pos):
+        """Determine if position is keeper."""
+        return self.is_man_2(self.get_tile(pos)) and pos == self.keeper
+    
+    def is_man_2(self, tile):
+        """Determine if tile is keeper."""
+        return tile & Tiles.MAN == Tiles.MAN
+    
+    def move_man(self, pos):
+        cur_pos = self.keeper
+        if(pos == cur_pos):
+            return
+        self.set_tile(pos, Tiles.MAN)
+        self.clear_tile(cur_pos)
+
+    def new_pos(self, pos, action):
+        cx, cy = pos
+        npos = pos
+        if action == "w":
+            npos = cx, cy - 1
+        if action == "a":
+            npos = cx - 1, cy
+        if action == "s":
+            npos = cx, cy + 1
+        if action == "d":
+            npos = cx + 1, cy
+        return npos
+
+    def is_box(self, pos):
+        return self.get_tile(pos) in [Tiles.BOX,Tiles.BOX_ON_GOAL]
 
 if __name__ == "__main__":
     mapa = Map("levels/2.xsb")
