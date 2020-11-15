@@ -7,6 +7,21 @@ import random
 import websockets
 from mapa import Map
 
+from tree_search import *
+import mapa
+from sokoban_domain import SokobanDomain
+from consts import Tiles, TILES
+
+def sokobanSolver(filename):
+        p = SokobanDomain(filename)
+        mapa = Map(filename)
+        initial = {"player": mapa.keeper, "boxes": mapa.boxes}
+        goal = {"boxes": mapa.filter_tiles([Tiles.MAN_ON_GOAL, Tiles.BOX_ON_GOAL, Tiles.GOAL])}
+        problema = SearchProblem(p, initial, goal)
+        tree = SearchTree(problema, 'depth', mapa)
+        tree.search()
+        return tree.get_plan(tree.solution)
+
 async def solver(puzzle, solution):
     while True:
         game_properties = await puzzle.get()
@@ -17,7 +32,7 @@ async def solver(puzzle, solution):
             await asyncio.sleep(0.1)  # this should be 0 in your code and this is REQUIRED
             break
 
-        keys = "sawdddsawaassdwawdwwasdssddwasaww"
+        keys = sokobanSolver(game_properties["map"])
         await solution.put(keys)
 
 async def agent_loop(puzzle, solution, server_address="localhost:8000", agent_name="student"):
