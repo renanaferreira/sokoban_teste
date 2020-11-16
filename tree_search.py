@@ -15,17 +15,6 @@
 from abc import ABC, abstractmethod
 import random
 
-def compareStates(state01, state02):
-    if(state01["player"] != state02["player"]):
-        return False
-    for box in state01["boxes"]:
-        if box not in state02["boxes"]:
-            return False
-    for box in state02["boxes"]:
-        if box not in state01["boxes"]:
-            return False
-    return True
-
 # Dominios de pesquisa
 # Permitem calcular
 # as accoes possiveis em cada estado, etc
@@ -54,6 +43,11 @@ class SearchDomain(ABC):
     # custo estimado de chegar de um estado a outro
     @abstractmethod
     def heuristic(self, state, goal):
+        pass
+
+    #see if two states are equivalent
+    @abstractmethod
+    def equivalent(self, state, goal):
         pass
 
     # test if the given "goal" is satisfied in "state"
@@ -90,8 +84,8 @@ class SearchNode:
     def in_parent(self, state):
         if self.parent == None:
             return False
-        into = (compareStates(state, self.parent.state)) or (self.parent.in_parent(state))
-        return into
+        return (self.problem.domain.equivalent(state, self.parent.state)) or (self.parent.in_parent(state))
+        
 
     def __str__(self):
         return f"no({str(self.state)},{str(self.depth)}, {str(self.action)})"
