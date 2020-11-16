@@ -49,8 +49,8 @@ class SokobanDomain(SearchDomain):
     def sort(self, boxes):
         return sorted(boxes, key=lambda pos: (pos[0], pos[1]))
 
-    def get_newstate(self, boxes, box, direction):
-        boxes.replace(box, new_pos(box, direction))
+    def get_newboxes(self, boxes, box, direction):
+        (boxes.replace(box, new_pos(box, direction)))
         return boxes
 
     def actions(self,state):
@@ -59,7 +59,7 @@ class SokobanDomain(SearchDomain):
         actlist = []
         for box in boxes:
             for direction in [direction for direction in ["w","a","s","d"] if self.map.is_blocked(new_pos(box, direction))]:
-                newboxes = self.get_newstate(boxes, box, direction)
+                newboxes = self.get_newboxes(boxes, box, direction)
                 if(self.trapped(newboxes)):
                     continue
                 solution = SearchTree(SearchProblem(PlayerDomain(self.level, newboxes), player, box), self.strategy).search()
@@ -69,9 +69,7 @@ class SokobanDomain(SearchDomain):
 
     def result(self,state,action):
         direction, box, solution = action
-        state["boxes"] = self.get_newstate(state["boxes"], box, direction)
-        state["player"] = box
-        return state
+        return {"boxes": self.get_newboxes(state["boxes"], box, direction), "player": box}
         
     def cost(self, state, action):
         return 1
