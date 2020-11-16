@@ -78,12 +78,7 @@ class SokobanDomain(SearchDomain):
 
     #https://www.kite.com/python/answers/how-to-get-all-unique-combinations-of-two-lists-in-python
     def heuristic(self, state, goal):
-        minimal = None
-        for comb in [list(zip(each_permutation, goal)) for each_permutation in itertools.permutations(state, len(goal))]:
-            tmp = sum([minimal_distance(comb[0], comb[1]) for pair in comb])
-            if(minimal is None or tmp < minimal):
-                minimal = tmp
-        return minimal
+        return ([sum([minimal_distance(comb[0], comb[1]) for pair in comb]) for comb in [list(zip(each_permutation, goal)) for each_permutation in itertools.permutations(state, len(goal))]].sort(key= lambda x: int(x), Reverse=True))[0]
 
     def equivalent(self,state1,state2):
         return (self.sort(state1["boxes"])==self.sort(state2["boxes"])) and state1["player"]==state2["player"]
