@@ -9,7 +9,7 @@ def minimal_distance(pos1, pos2):
     x2, y2 = pos2
     return hypot(x1-x2, y1-y2)
 
-def new_pos(self, pos, action):
+def new_pos(pos, action):
     cx, cy = pos
     if action == "w":
         return cx, cy - 1
@@ -58,7 +58,7 @@ class SokobanDomain(SearchDomain):
         player = state["player"]
         actlist = []
         for box in boxes:
-            for direction in [direction for direction in ["w","a","s","d"] if self.map.is_blocked(new_pos(box, direction))]:
+            for direction in [direction for direction in ["w","a","s","d"] if not self.map.is_blocked(new_pos(box, direction))]:
                 newboxes = self.get_newboxes(boxes, box, direction)
                 if(self.trapped(newboxes)):
                     continue
@@ -76,7 +76,8 @@ class SokobanDomain(SearchDomain):
 
     #https://www.kite.com/python/answers/how-to-get-all-unique-combinations-of-two-lists-in-python
     def heuristic(self, state, goal):
-        return ([sum([minimal_distance(comb[0], comb[1]) for pair in comb]) for comb in [list(zip(each_permutation, goal)) for each_permutation in itertools.permutations(state, len(goal))]].sort(key= lambda x: int(x), Reverse=True))[0]
+        return 0
+        #return ([sum([minimal_distance(comb[0], comb[1]) for pair in comb]) for comb in [list(zip(each_permutation, goal)) for each_permutation in itertools.permutations(state, len(goal))]].sort(key= lambda x: int(x), Reverse=True))[0]
 
     def equivalent(self,state1,state2):
         return (self.sort(state1["boxes"])==self.sort(state2["boxes"])) and state1["player"]==state2["player"]

@@ -137,7 +137,7 @@ class Map:
         if self._map[y][x] in [Tiles.WALL]:
             logger.debug("Position is a wall")
             return True
-        return Falses
+        return False
 
 if __name__ == "__main__":
     mapa = Map("levels/2.xsb")
