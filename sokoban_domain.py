@@ -3,6 +3,7 @@ from math import hypot
 from mapa import Map
 from consts import Tiles, TILES
 import itertools
+import copy
 
 def minimal_distance(pos1, pos2):
     x1, y1 = pos1
@@ -50,26 +51,33 @@ class SokobanDomain(SearchDomain):
         return sorted(boxes, key=lambda pos: (pos[0], pos[1]))
 
     def get_newboxes(self, boxes, box, direction):
-        (boxes.replace(box, new_pos(box, direction)))
-        return boxes
+        newboxes = copy.deepcopy(boxes)
+        newboxes[boxes.index(box)] = new_pos(box, direction)
+        return newboxes
 
     def actions(self,state):
+        print(state)
         boxes = state["boxes"]
         player = state["player"]
         actlist = []
         for box in boxes:
             for direction in [direction for direction in ["w","a","s","d"] if not self.map.is_blocked(new_pos(box, direction))]:
+                print(boxes, box)
                 newboxes = self.get_newboxes(boxes, box, direction)
                 if(self.trapped(newboxes)):
                     continue
-                solution = SearchTree(SearchProblem(PlayerDomain(self.level, newboxes), player, box), self.strategy).search()
+                dominio = PlayerDomain(self.level, newboxes)
+                new_tree = SearchTree(SearchProblem(dominio, player, box), 'depth')
+                solution = new_tree.search()
                 if(solution is not None):
                     actlist += (direction, box, list(solution))
         return actlist
 
     def result(self,state,action):
         direction, box, solution = action
-        return {"boxes": self.get_newboxes(state["boxes"], box, direction), "player": box}
+        newstate = {"boxes": self.get_newboxes(state["boxes"], box, direction), "player": box}
+        print('resulta ', newstate)
+        return newstate
         
     def cost(self, state, action):
         return 1
@@ -104,6 +112,7 @@ class PlayerDomain(SearchDomain):
         return [direction for direction in ["w","a","s","d"] if self.map.is_blocked(new_pos(state, direction))]
 
     def result(self,state,action):
+        print('oi')
         return new_pos(state, action)
         
     def cost(self, state, action):

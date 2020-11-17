@@ -15,6 +15,13 @@
 from abc import ABC, abstractmethod
 import random
 
+def sortear(boxes):
+        return sorted(boxes, key=lambda pos: (pos[0], pos[1]))
+
+def equivalent(state1,state2):
+        print(state1)
+        return (sortear(state1["boxes"])==sortear(state2["boxes"])) and state1["player"]==state2["player"]
+
 # Dominios de pesquisa
 # Permitem calcular
 # as accoes possiveis em cada estado, etc
@@ -84,7 +91,7 @@ class SearchNode:
     def in_parent(self, state):
         if self.parent == None:
             return False
-        return (self.problem.domain.equivalent(state, self.parent.state)) or (self.parent.in_parent(state))
+        return (equivalent(state, self.parent.state)) or (self.parent.in_parent(state))
         
 
     def __str__(self):
@@ -160,6 +167,7 @@ class SearchTree:
             for a in shuffleActions:
                 # newstate = posição das caixas
                 newstate = self.problem.domain.result(node.state,a)
+                print(type(self.problem.domain))
                 if newstate == None:
                     continue
                 
