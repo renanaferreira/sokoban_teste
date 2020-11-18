@@ -11,7 +11,6 @@
 #  (c) Luis Seabra Lopes
 #  Introducao a Inteligencia Artificial, 2012-2019,
 #  Inteligência Artificial, 2014-2019
-
 from abc import ABC, abstractmethod
 import random
 
@@ -171,7 +170,7 @@ class SearchTree:
                 newnode = SearchNode(newstate,node, node.depth+1, node.cost+self.problem.domain.cost(node.state, a),
                                              self.problem.domain.heuristic(newstate,self.problem.goal), a)
                 if not node.in_parent(newstate) and (limit is None or newnode.depth <= limit):
-                    print("result - ",node.state," - ",a," - ",newstate)
+                    #print("result - ",node.state," - ",a," - ",newstate)
                     lnewnodes.append(newnode)        
             self.add_to_open(lnewnodes)
 
@@ -212,6 +211,7 @@ class SearchTree:
             pos_m_n=(caixa_x-1, caixa_y)
             pos_n_p=(caixa_x, caixa_y+1)
 
+            
             if self.map.is_blocked(pos_m_n) and self.map.is_blocked(pos_n_m):
                 return True
 
