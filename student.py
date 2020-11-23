@@ -54,13 +54,20 @@ async def agent_loop(puzzle, solution, server_address="localhost:8001", agent_na
                     print(keys)
 
                 key = ""
-                if len(keys):  # we got a solution!
-                    key = keys[0]
-                    keys = keys[1:]
-
-                await websocket.send(
-                    json.dumps({"cmd": "key", "key": key})
-                )
+                while True:
+                    if len(keys)>0:  # we got a solution!
+                        key = keys[0]
+                        keys = keys[1:]
+                        print(key)
+                        print(keys)
+                        await asyncio.sleep(0.12)
+                        await websocket.send(
+                            json.dumps({"cmd": "key", "key": key})
+                        )
+                    break
+                
+                await asyncio.sleep(0)
+                
             except websockets.exceptions.ConnectionClosedOK:
                 print("Server has cleanly disconnected us")
                 return
