@@ -17,18 +17,21 @@ def sokobanSolver(filename):
         initial = {"player": mapa.keeper, "boxes": mapa.boxes}
         goal = {"boxes": mapa.filter_tiles([Tiles.MAN_ON_GOAL, Tiles.BOX_ON_GOAL, Tiles.GOAL])}
         problema = SearchProblem(p, initial, goal)
-        tree = SearchTree(problema, 'depth', mapa)
+        tree = SearchTree(problema, 'depth')
         tree.search()
-        return tree.get_plan(tree.solution)
+        path = tree.plan
+        path2 = []
+        for idx in path:
+            path2 += idx[2]
+        return path2
 
 async def solver(puzzle, solution):
     while True:
         game_properties = await puzzle.get()
         mapa = Map(game_properties["map"])
-        print(mapa)
 
         while True:
-            await asyncio.sleep(0.1)  # this should be 0 in your code and this is REQUIRED
+            await asyncio.sleep(0)  # this should be 0 in your code and this is REQUIRED
             break
 
         keys = sokobanSolver(game_properties["map"])
@@ -70,6 +73,7 @@ async def agent_loop(puzzle, solution, server_address="localhost:8001", agent_na
 # DO NOT CHANGE THE LINES BELLOW
 # You can change the default values using the command line, example:
 # $ NAME='arrumador' python3 client.py
+'''
 loop = asyncio.get_event_loop()
 SERVER = os.environ.get("SERVER", "localhost")
 PORT = os.environ.get("PORT", "8001")
@@ -83,3 +87,8 @@ solver_task = loop.create_task(solver(puzzle, solution))
 
 loop.run_until_complete(asyncio.gather(net_task, solver_task))
 loop.close()
+'''
+
+solution = sokobanSolver('levels/1.xsb')
+#for node in solution:
+print(solution)

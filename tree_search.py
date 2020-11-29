@@ -15,13 +15,6 @@
 from abc import ABC, abstractmethod
 import random
 
-def sortear(boxes):
-        return sorted(boxes, key=lambda pos: (pos[0], pos[1]))
-
-def equivalent(state1,state2):
-        print(state1)
-        return (sortear(state1["boxes"])==sortear(state2["boxes"])) and state1["player"]==state2["player"]
-
 # Dominios de pesquisa
 # Permitem calcular
 # as accoes possiveis em cada estado, etc
@@ -54,7 +47,7 @@ class SearchDomain(ABC):
 
     #see if two states are equivalent
     @abstractmethod
-    def equivalent(self, state, goal):
+    def equivalent(self, state1, state2):
         pass
 
     # test if the given "goal" is satisfied in "state"
@@ -88,10 +81,10 @@ class SearchNode:
         self.action = action
 
     
-    def in_parent(self, state):
+    def in_parent(self, state, domain):
         if self.parent == None:
             return False
-        return (equivalent(state, self.parent.state)) or (self.parent.in_parent(state))
+        return (domain.equivalent(state, self.parent.state)) or (self.parent.in_parent(state, domain))
         
 
     def __str__(self):
@@ -99,11 +92,12 @@ class SearchNode:
     def __repr__(self):
         return str(self)
 
+
 # Arvores de pesquisa
 class SearchTree:
 
     # construtor
-    def __init__(self,problem, strategy='breadth', mapp=None): 
+    def __init__(self,problem, strategy='breadth'): 
         self.problem = problem
         root = SearchNode(problem.initial, None, 0, 0, self.problem.domain.heuristic(
             self.problem.initial, self.problem.goal))
@@ -113,7 +107,6 @@ class SearchTree:
         self.terminals = 1
         self.non_terminals = 0
         self.avg_ramification = None
-        self.map=mapp
 
     @property
     def length(self):
@@ -133,6 +126,7 @@ class SearchTree:
             return self.get_plan(self.solution)
         return None
 
+
     # obter o caminho (sequencia de estados) da raiz ate um no
     def get_path(self,node):
         if node.parent == None:
@@ -150,10 +144,8 @@ class SearchTree:
 
     # procurar a solucao
     def search(self, limit=None):
-        count = 0
         while self.open_nodes != []:
             node = self.open_nodes.pop(0)
-            print(count); count += 1
             self.non_terminals+=1
             self.terminals=len(self.open_nodes)
             if self.problem.goal_test(node.state):
@@ -161,22 +153,13 @@ class SearchTree:
                 self.avg_ramification = (self.terminals+self.non_terminals-1)/self.non_terminals
                 return self.get_path(node)
             lnewnodes = []
-
-            shuffleActions = self.problem.domain.actions(node.state)
-            random.shuffle(shuffleActions)
-            for a in shuffleActions:
-                # newstate = posição das caixas
+            for a in self.problem.domain.actions(node.state):
                 newstate = self.problem.domain.result(node.state,a)
-                print(type(self.problem.domain))
-                if newstate == None:
-                    continue
-                
                 newnode = SearchNode(newstate,node, node.depth+1, node.cost+self.problem.domain.cost(node.state, a),
                                              self.problem.domain.heuristic(newstate,self.problem.goal), a)
-                if not node.in_parent(newstate) and (limit is None or newnode.depth <= limit):
+                if not node.in_parent(newstate, self.problem.domain) and (limit is None or newnode.depth <= limit):
                     lnewnodes.append(newnode)        
             self.add_to_open(lnewnodes)
-
         return None
 
     # juntar novos nos a lista de nos abertos de acordo com a estrategia

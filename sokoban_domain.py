@@ -12,7 +12,7 @@ def minimal_distance(pos1, pos2):
 
 def new_pos(pos, action):
     cx, cy = pos
-    if action == "w":
+    if   action == "w":
         return cx, cy - 1
     elif action == "a":
         return cx - 1, cy
@@ -20,6 +20,17 @@ def new_pos(pos, action):
         return cx, cy + 1
     elif action == "d":
         return cx + 1, cy
+
+def prior_pos(pos, action):
+    cx, cy = pos
+    if   action == "w":
+        return cx, cy + 1
+    elif action == "a":
+        return cx + 1, cy
+    elif action == "s":
+        return cx, cy - 1
+    elif action == "d":
+        return cx - 1, cy
 
 class SokobanDomain(SearchDomain):
     def __init__(self, filename):
@@ -30,10 +41,13 @@ class SokobanDomain(SearchDomain):
         self.map = Map(filename)
         self.map.clear_tile(self.map.keeper)
         for box in self.map.boxes:
-            self.map.clear_tile(box)  
+            self.map.clear_tile(box)
 
-    def is_blocked(self, pos1, pos2):
-        return self.map.is_blocked(pos1) and self.map.is_blocked(pos2)
+    def is_blocked(self, other_boxes, pos):
+        return self.map.is_blocked(pos) or pos in other_boxes
+
+    def is_blocked_2(self, pos1, pos2):
+        return (self.map.is_blocked(pos1)) and (self.map.is_blocked(pos2))
 
     def trapped(self, boxes):
         for box in boxes:
@@ -43,7 +57,7 @@ class SokobanDomain(SearchDomain):
             pos2= new_pos(box, "w")
             pos3= new_pos(box, "d")
             pos4= new_pos(box, "s")
-            if self.is_blocked(pos1, pos2) or self.is_blocked(pos3, pos4) or  self.is_blocked(pos3, pos2) or self.is_blocked(pos1, pos4):
+            if self.is_blocked_2(pos1, pos2) or self.is_blocked_2(pos3, pos4) or  self.is_blocked_2(pos3, pos2) or self.is_blocked_2(pos1, pos4):
                 return True
         return False
 
@@ -55,29 +69,33 @@ class SokobanDomain(SearchDomain):
         newboxes[boxes.index(box)] = new_pos(box, direction)
         return newboxes
 
+    def get_other_boxes(self, boxes, box_goal):
+        boxes2 = copy.deepcopy(boxes)
+        boxes2.remove(box_goal)
+        return boxes2
+
+
     def actions(self,state):
-        print(state)
         boxes = state["boxes"]
         player = state["player"]
         actlist = []
         for box in boxes:
-            for direction in [direction for direction in ["w","a","s","d"] if not self.map.is_blocked(new_pos(box, direction))]:
-                print(boxes, box)
-                newboxes = self.get_newboxes(boxes, box, direction)
-                if(self.trapped(newboxes)):
-                    continue
-                dominio = PlayerDomain(self.level, newboxes)
-                new_tree = SearchTree(SearchProblem(dominio, player, box), 'depth')
+            other_boxes = self.get_other_boxes(boxes, box)
+            for direction in [direction for direction in ["w","a","s","d"] if not (self.is_blocked(other_boxes, new_pos(box, direction)) or self.trapped(self.get_newboxes(boxes, box, direction)))]:
+                new_tree = SearchTree(SearchProblem(PlayerDomain(self.level, boxes), player, prior_pos(box, direction)), 'a*')
                 solution = new_tree.search()
                 if(solution is not None):
-                    actlist += (direction, box, list(solution))
+                    path = new_tree.plan
+                    print(new_tree.problem.domain.map)
+                    print("\n", box)
+                    print("\n", path)
+                    actlist += [(direction, box, path)]
         return actlist
 
     def result(self,state,action):
-        direction, box, solution = action
-        newstate = {"boxes": self.get_newboxes(state["boxes"], box, direction), "player": box}
-        print('resulta ', newstate)
-        return newstate
+        direction, box, path = action
+        return {"boxes": self.get_newboxes(state["boxes"], box, direction), "player": box}
+        
         
     def cost(self, state, action):
         return 1
@@ -93,8 +111,16 @@ class SokobanDomain(SearchDomain):
     def satisfies(self, state, goal):
         return (self.sort(state["boxes"])==self.sort(goal["boxes"]))
 
+
+
+
+
+
+
+
 class PlayerDomain(SearchDomain):
     def __init__(self, filename, boxes):
+        self.boxes = boxes
         self.change_map(filename, boxes)
 
     def change_map(self, filename, boxes):
@@ -104,21 +130,21 @@ class PlayerDomain(SearchDomain):
         for box in self.map.boxes:
             self.map.clear_tile(box)
         for goal in self.map.empty_goals:
-            self.map.set_tile(goal, Tiles.FLOOR)
+            (x, y) = goal
+            self.map._map[y][x] = Tiles.FLOOR
         for box in boxes:
             self.map.set_tile(box, Tiles.WALL)
 
     def actions(self,state):
-        return [direction for direction in ["w","a","s","d"] if self.map.is_blocked(new_pos(state, direction))]
+        return [direction for direction in ["w","a","s","d"] if not self.map.is_blocked(new_pos(state, direction))]
 
     def result(self,state,action):
-        print('oi')
         return new_pos(state, action)
         
     def cost(self, state, action):
         return 1
 
-    def heuristic(self, state, goal): 
+    def heuristic(self, state, goal):
         return minimal_distance(state, goal)
 
     def equivalent(self,state1,state2):
