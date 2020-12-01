@@ -10,6 +10,8 @@ from mapa import Map
 from tree_search import *
 from sokoban_domain import SokobanDomain
 from consts import Tiles, TILES
+import copy
+from uteis import *
 
 def sokobanSolver(filename):
         p = SokobanDomain(filename)
@@ -18,12 +20,12 @@ def sokobanSolver(filename):
         goal = {"boxes": mapa.filter_tiles([Tiles.MAN_ON_GOAL, Tiles.BOX_ON_GOAL, Tiles.GOAL])}
         problema = SearchProblem(p, initial, goal)
         tree = SearchTree(problema, 'depth')
-        tree.search()
+        print(tree.search())
         path = tree.plan
-        path2 = []
+        final = []
         for idx in path:
-            path2 += idx[2]
-        return path2
+            final += idx[2] + [idx[0]]
+        return final
 
 async def solver(puzzle, solution):
     while True:
@@ -89,6 +91,6 @@ loop.run_until_complete(asyncio.gather(net_task, solver_task))
 loop.close()
 '''
 
-solution = sokobanSolver('levels/1.xsb')
+solution = sokobanSolver('levels/2.xsb')
 #for node in solution:
 print(solution)
