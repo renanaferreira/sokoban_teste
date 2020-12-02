@@ -73,40 +73,36 @@ class SearchProblem:
 # Nos de uma arvore de pesquisa
 class SearchNode:
     def __init__(self,state,parent, depth, cost, heuristic=0, action=None): 
-        self.state = state
-        self.parent = parent
-        self.depth = depth
-        self.cost = cost
+        self.state     = state
+        self.parent    = parent
+        self.depth     = depth
+        self.cost      = cost
         self.heuristic = heuristic
-        self.action = action
-
+        self.action    = action
+        self.children  = None
     
-    def in_parent(self, state, domain):
+    def in_parent(self, state, equals):
         if self.parent == None:
             return False
-        return (domain.equivalent(state, self.parent.state)) or (self.parent.in_parent(state, domain))
-        
+        return equals(state, self.parent.state) or self.parent.in_parent(state, equals)
 
     def __str__(self):
-        return f"no({str(self.state)},{str(self.depth)}, {str(self.action)})"
+        return f"no({str(self.state)},{str(self.parent)}, {str(self.action)})"
     def __repr__(self):
         return str(self)
-
 
 # Arvores de pesquisa
 class SearchTree:
 
     # construtor
     def __init__(self,problem, strategy='breadth'): 
-        self.problem = problem
-        root = SearchNode(problem.initial, None, 0, 0, self.problem.domain.heuristic(
-            self.problem.initial, self.problem.goal))
-        self.open_nodes = [root]
-        self.strategy = strategy
-        self.solution = None
-        self.terminals = 1
-        self.non_terminals = 0
-        self.avg_ramification = None
+        self.problem          = problem
+        self.root             = SearchNode(problem.initial, None, 0, 0, self.problem.domain.heuristic(
+                                self.problem.initial, self.problem.goal))
+        self.open_nodes       = [self.root]
+        self.closed_nodes     = []
+        self.strategy         = strategy
+        self.solution         = None
 
     @property
     def length(self):
@@ -119,47 +115,56 @@ class SearchTree:
         if self.solution:
             return self.solution.cost
         return None
-    
+
     @property
     def plan(self):
         if self.solution:
             return self.get_plan(self.solution)
         return None
+    
+    @property
+    def terminals(self):
+        if self.solution:
+            return len(self.open_nodes)+1
+        return None
 
+    @property
+    def non_terminals(self):
+        if self.solution:
+            return len(self.closed_nodes)-1
+        return None
 
     # obter o caminho (sequencia de estados) da raiz ate um no
     def get_path(self,node):
         if node.parent == None:
             return [node.state]
-        path = self.get_path(node.parent)
-        path += [node.state]
-        return(path)
+        return self.get_path(node.parent) + [node.state]
 
     def get_plan(self,node):
         if node.parent == None:
             return []
-        plan = self.get_plan(node.parent)
-        plan += [node.action]
-        return plan
+        return self.get_plan(node.parent) + [node.action]
+
+    def instantiate_state(self, node, action):
+        newstate = self.problem.domain.result(node.state,action)
+        newnode  = SearchNode(newstate,node, node.depth+1, node.cost+self.problem.domain.cost(node.state, action), self.problem.domain.heuristic(newstate,self.problem.goal), action)
+        return newstate, newnode
 
     # procurar a solucao
     def search(self, limit=None):
         while self.open_nodes != []:
             node = self.open_nodes.pop(0)
-            self.non_terminals+=1
-            self.terminals=len(self.open_nodes)
+
             if self.problem.goal_test(node.state):
                 self.solution = node
-                self.avg_ramification = (self.terminals+self.non_terminals-1)/self.non_terminals
                 return self.get_path(node)
-            lnewnodes = []
-            for a in self.problem.domain.actions(node.state):
-                newstate = self.problem.domain.result(node.state,a)
-                newnode = SearchNode(newstate,node, node.depth+1, node.cost+self.problem.domain.cost(node.state, a),
-                                             self.problem.domain.heuristic(newstate,self.problem.goal), a)
-                if not node.in_parent(newstate, self.problem.domain) and (limit is None or newnode.depth <= limit):
-                    lnewnodes.append(newnode)        
-            self.add_to_open(lnewnodes)
+
+            node.children = []
+            for action in self.problem.domain.actions(node.state):
+                newstate, newnode = self.instantiate_state(node, action)
+                if not node.in_parent(newstate, self.problem.domain.equivalent) and (limit is None or newnode.depth <= limit): 
+                    node.children.append(newnode)
+            self.add_to_open(node.children)
         return None
 
     # juntar novos nos a lista de nos abertos de acordo com a estrategia
@@ -177,3 +182,14 @@ class SearchTree:
         elif self.strategy == 'a*':
             self.open_nodes.extend(lnewnodes)
             self.open_nodes.sort(key = lambda node: node.heuristic + node.cost)
+
+    def show(self,node=None,indent=''):
+        if node==None:
+            self.show(self.root)
+            print('-----------------------------------------------------------------------')
+        else:
+            print(indent+str(node.state))
+            if node.children==None:
+                return
+            for n in node.children:
+                self.show(n,indent+'  ')

@@ -7,8 +7,9 @@ import itertools
 from uteis import *
 
 class SokobanDomain(SearchDomain):
-    def __init__(self, filename):
+    def __init__(self, filename, strategy="a*"):
         self.change_map(filename)
+        self.strategy = strategy
 
     def change_map(self, filename):
         self.level = filename
@@ -36,12 +37,8 @@ class SokobanDomain(SearchDomain):
                 return True
         return False
 
-    def sort(self, boxes):
-        return sorted(boxes, key=lambda pos: (pos[0], pos[1]))
-
-
     def actions(self,state):
-        boxes = state["boxes"]
+        boxes  = state["boxes"]
         player = state["player"]
 
         actlist = []
@@ -50,7 +47,7 @@ class SokobanDomain(SearchDomain):
             for direction in [direction for direction in ["w","a","s","d"] if not self.is_blocked(other_boxes, new_pos(box, direction))]:
                 if self.trapped(get_newboxes(boxes, box, direction)):
                     continue
-                new_tree = SearchTree(SearchProblem(PlayerDomain(self.level, boxes), player, prior_pos(box, direction)), 'a*')
+                new_tree = SearchTree(SearchProblem(PlayerDomain(self.level, boxes), player, prior_pos(box, direction)), self.strategy)
                 solution = new_tree.search()
                 if(solution is not None):
                     path = new_tree.plan
@@ -60,8 +57,7 @@ class SokobanDomain(SearchDomain):
     def result(self,state,action):
         direction, box, path = action
         return {"boxes": get_newboxes(state["boxes"], box, direction), "player": box}
-        
-        
+
     def cost(self, state, action):
         return 1
 
@@ -71,21 +67,16 @@ class SokobanDomain(SearchDomain):
         #return ([sum([minimal_distance(comb[0], comb[1]) for pair in comb]) for comb in [list(zip(each_permutation, goal)) for each_permutation in itertools.permutations(state, len(goal))]].sort(key= lambda x: int(x), Reverse=True))[0]
 
     def equivalent(self,state1,state2):
-        return (self.sort(state1["boxes"])==self.sort(state2["boxes"])) and state1["player"]==state2["player"]
+        return (sort_boxes(state1["boxes"])==sort_boxes(state2["boxes"]))
 
     def satisfies(self, state, goal):
-        return (self.sort(state["boxes"])==self.sort(goal["boxes"]))
-
-
-
-
+        return self.equivalent(state,goal)
 
 
 
 
 class PlayerDomain(SearchDomain):
     def __init__(self, filename, boxes):
-        self.boxes = boxes
         self.change_map(filename, boxes)
 
     def change_map(self, filename, boxes):
@@ -101,7 +92,8 @@ class PlayerDomain(SearchDomain):
             self.map.set_tile(box, Tiles.WALL)
 
     def actions(self,state):
-        return [direction for direction in ["w","a","s","d"] if not self.map.is_blocked(new_pos(state, direction))]
+        return [direction for direction in ["w","a","s","d"] if not self.map.is_blocked(
+                                                                    new_pos(state, direction))]
 
     def result(self,state,action):
         return new_pos(state, action)

@@ -3,6 +3,7 @@ import getpass
 import json
 import os
 import random
+from functools import reduce
 
 import websockets
 from mapa import Map
@@ -10,22 +11,25 @@ from mapa import Map
 from tree_search import *
 from sokoban_domain import SokobanDomain
 from consts import Tiles, TILES
-import copy
 from uteis import *
 
 def sokobanSolver(filename):
-        p = SokobanDomain(filename)
         mapa = Map(filename)
         initial = {"player": mapa.keeper, "boxes": mapa.boxes}
         goal = {"boxes": mapa.filter_tiles([Tiles.MAN_ON_GOAL, Tiles.BOX_ON_GOAL, Tiles.GOAL])}
-        problema = SearchProblem(p, initial, goal)
-        tree = SearchTree(problema, 'depth')
-        print(tree.search())
-        path = tree.plan
+        strategy = 'a*'
+        problema = SearchProblem(SokobanDomain(filename, strategy=strategy), initial, goal)
+        tree = SearchTree(problema, strategy)
+        sol = tree.search()
+        print("goal",goal,"\n")
+        tree.show()
+        if sol is None:
+            return []
         final = []
-        for idx in path:
+        for idx in tree.plan:
             final += idx[2] + [idx[0]]
         return final
+        
 
 async def solver(puzzle, solution):
     while True:
@@ -92,5 +96,4 @@ loop.close()
 '''
 
 solution = sokobanSolver('levels/2.xsb')
-#for node in solution:
 print(solution)
