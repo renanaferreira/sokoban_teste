@@ -3,7 +3,6 @@ import getpass
 import json
 import os
 import random
-from functools import reduce
 
 import websockets
 from mapa import Map
@@ -21,9 +20,9 @@ def sokobanSolver(filename):
         strategy = 'a*'
         problema = SearchProblem(SokobanDomain(filename, strategy=strategy), initial, goal)
         tree = SearchTree(problema, strategy)
-
+        print("goal: ", goal, "\n-------------------------------------------------------")
         sol = tree.search()
-
+        tree.show()
         if sol is None:
             return []
         final = [idx[1] for idx in tree.plan]
@@ -109,5 +108,5 @@ loop.close()
 '''
 
 
-solution = sokobanSolver('levels/8.xsb')
+solution = sokobanSolver('levels/1.xsb')
 print(solution)#'''
