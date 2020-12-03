@@ -15,17 +15,18 @@ from uteis import *
 
 def sokobanSolver(filename):
         mapa = Map(filename)
+        print(filename)
         initial = {"player": mapa.keeper, "boxes": mapa.boxes}
         goal = {"boxes": mapa.filter_tiles([Tiles.MAN_ON_GOAL, Tiles.BOX_ON_GOAL, Tiles.GOAL])}
         strategy = 'a*'
         problema = SearchProblem(SokobanDomain(filename, strategy=strategy), initial, goal)
         tree = SearchTree(problema, strategy)
+
         sol = tree.search()
+
         if sol is None:
             return []
-        final = []
-        for idx in tree.plan:
-            final += idx[1]
+        final = [idx[1] for idx in tree.plan]
         return final
         
 
@@ -34,12 +35,26 @@ async def solver(puzzle, solution):
         game_properties = await puzzle.get()
         mapa = Map(game_properties["map"])
 
+        
+
+        initial = {"player": mapa.keeper, "boxes": mapa.boxes}
+        goal = {"boxes": mapa.filter_tiles([Tiles.MAN_ON_GOAL, Tiles.BOX_ON_GOAL, Tiles.GOAL])}
+        strategy = 'a*'
+        problema = SearchProblem(SokobanDomain(game_properties["map"], strategy=strategy), initial, goal)
+        tree = SearchTree(problema, strategy)
+
         while True:
+            sol = tree.search()
             await asyncio.sleep(0)  # this should be 0 in your code and this is REQUIRED
             break
-
-        keys = sokobanSolver(game_properties["map"])
-        await solution.put(keys)
+        
+        if sol is None:
+            return []
+        final = []
+        for idx in tree.plan:
+            final += idx[1]
+        print(final)
+        await solution.put(final)
 
 async def agent_loop(puzzle, solution, server_address="localhost:8001", agent_name="student"):
     async with websockets.connect(f"ws://{server_address}/player") as websocket:
@@ -62,7 +77,7 @@ async def agent_loop(puzzle, solution, server_address="localhost:8001", agent_na
                     keys = await solution.get()
 
                 key = ""
-                if len(keys):  # we got a solution!
+                if len(keys)>0:  # we got a solution!
                     key = keys[0]
                     keys = keys[1:]
 
@@ -77,14 +92,14 @@ async def agent_loop(puzzle, solution, server_address="localhost:8001", agent_na
 # DO NOT CHANGE THE LINES BELLOW
 # You can change the default values using the command line, example:
 # $ NAME='arrumador' python3 client.py
-'''
+
 loop = asyncio.get_event_loop()
 SERVER = os.environ.get("SERVER", "localhost")
 PORT = os.environ.get("PORT", "8001")
 NAME = os.environ.get("NAME", getpass.getuser())
 
-puzzle = asyncio.Queue(loop=loop)
-solution = asyncio.Queue(loop=loop)
+puzzle = asyncio.Queue()
+solution = asyncio.Queue()
 
 net_task = loop.create_task(agent_loop(puzzle, solution, f"{SERVER}:{PORT}", NAME))
 solver_task = loop.create_task(solver(puzzle, solution))
