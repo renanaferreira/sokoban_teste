@@ -81,20 +81,20 @@ class PlayerDomain(SearchDomain):
         self.change_map(filename, boxes)
 
     def change_map(self, filename, boxes):
+        self.boxes = boxes
         self.level = filename
         self.map = Map(filename)
         self.map.clear_tile(self.map.keeper)
         for box in self.map.boxes:
             self.map.clear_tile(box)
-        for goal in self.map.empty_goals:
-            (x, y) = goal
-            self.map._map[y][x] = Tiles.FLOOR
         for box in boxes:
-            self.map.set_tile(box, Tiles.WALL)
+            self.map.set_tile(box, Tiles.BOX)
+
+    def is_blocked(self, pos):
+        return self.map.is_blocked(pos) or pos in self.boxes
 
     def actions(self,state):
-        return [direction for direction in ["w","a","s","d"] if not self.map.is_blocked(
-                                                                    new_pos(state, direction))]
+        return [direction for direction in ["w","a","s","d"] if not self.is_blocked(new_pos(state, direction))]
 
     def result(self,state,action):
         return new_pos(state, action)
