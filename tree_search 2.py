@@ -11,7 +11,6 @@
 #  (c) Luis Seabra Lopes
 #  Introducao a Inteligencia Artificial, 2012-2019,
 #  Inteligência Artificial, 2014-2019
-
 from abc import ABC, abstractmethod
 import random
 
@@ -149,10 +148,8 @@ class SearchTree:
 
     # procurar a solucao
     def search(self, limit=None):
-        count = 0
         while self.open_nodes != []:
             node = self.open_nodes.pop(0)
-            print(count); count += 1
             self.non_terminals+=1
             self.terminals=len(self.open_nodes)
             if self.problem.goal_test(node.state):
@@ -162,16 +159,17 @@ class SearchTree:
             lnewnodes = []
 
             shuffleActions = self.problem.domain.actions(node.state)
-            random.shuffle(shuffleActions)
+            random.shuffle(shuffleActions);
             for a in shuffleActions:
                 # newstate = posição das caixas
                 newstate = self.problem.domain.result(node.state,a)
-                if newstate == None:
+
+                if self.encurralado(newstate):
                     continue
-                
-                newnode = SearchNode(newstate,node, node.depth+1, node.cost+self.problem.domain.cost(node.state, a),
-                                             self.problem.domain.heuristic(newstate,self.problem.goal), a)
+
+                newnode = SearchNode(newstate,node, node.depth+1, node.cost+self.problem.domain.cost(node.state, a), self.problem.domain.heuristic(newstate,self.problem.goal), a)
                 if not node.in_parent(newstate) and (limit is None or newnode.depth <= limit):
+                    print("result - ",node.state," - ",a," - ",newstate)
                     lnewnodes.append(newnode)        
             self.add_to_open(lnewnodes)
 
@@ -192,38 +190,54 @@ class SearchTree:
         elif self.strategy == 'a*':
             self.open_nodes.extend(lnewnodes)
             self.open_nodes.sort(key = lambda node: node.heuristic + node.cost)
+        elif self.strategy == 'hybrid':
+            counter=0
+            for x in lnewnodes:
+                if counter % 2 == 0:
+                    self.open_nodes[:0]=[x]
+                else:
+                    self.open_nodes.append(x)
+                counter+=1
 
-    def encurralado(self, boxes):
+    def encurralado(self, newstate):
+        boxes=newstate["boxes"]
         for x in boxes:
-            if self.problem.goal_box(x):
+            if self.posBlocked(x):
+                return True
+            else:
                 continue
-            caixa_x = x[0]
-            caixa_y = x[1]
-
-            pos_m_n=(caixa_x-1, caixa_y)
-            pos_n_m=(caixa_x, caixa_y-1)
-
-            pos_p_n=(caixa_x+1, caixa_y)
-            pos_n_p=(caixa_x, caixa_y+1)
-
-            pos_p_n=(caixa_x+1, caixa_y)
-            pos_n_m=(caixa_x, caixa_y-1)
-
-            pos_m_n=(caixa_x-1, caixa_y)
-            pos_n_p=(caixa_x, caixa_y+1)
-
-            if self.map.is_blocked(pos_m_n) and self.map.is_blocked(pos_n_m):
-                return True
-
-            if self.map.is_blocked(pos_p_n) and self.map.is_blocked(pos_n_p):
-                return True
-
-            if self.map.is_blocked(pos_p_n) and self.map.is_blocked(pos_n_m):
-                return True
-
-            if self.map.is_blocked(pos_m_n) and self.map.is_blocked(pos_n_p):
-                return True
+        
         
         return False
+    
+    def posBlocked(self, box):
+        if self.problem.goal_box(box):
+            return False
+
+        caixa_x, caixa_y = box
+        # _m minus 1
+        # _n no operation
+        # _p plus 1
+        pos_m_n=(caixa_x-1, caixa_y)
+        pos_n_m=(caixa_x, caixa_y-1)
+        pos_p_n=(caixa_x+1, caixa_y)
+        pos_n_p=(caixa_x, caixa_y+1)
+
+        if self.map.is_blocked(pos_m_n) and self.map.is_blocked(pos_n_m):
+            return True
+        if self.map.is_blocked(pos_p_n) and self.map.is_blocked(pos_n_p):
+            return True
+        if self.map.is_blocked(pos_p_n) and self.map.is_blocked(pos_n_m):
+            return True
+        if self.map.is_blocked(pos_m_n) and self.map.is_blocked(pos_n_p):
+            return True
+        
+
+        return False
+        
+        
+
+        
+
 
             

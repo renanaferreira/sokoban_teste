@@ -66,8 +66,17 @@ class Client:
 # DO NOT CHANGE THE LINES BELLOW
 # You can change the default values using the command line, example:
 # $ NAME='arrumador' python3 client.py
+def tester(filename):
+    p = SokobanDomain(filename)
+    mapa = Map(filename)
+    initial = {"player": mapa.keeper, "boxes": mapa.boxes}
+    goal = {"boxes": mapa.filter_tiles([Tiles.MAN_ON_GOAL, Tiles.BOX_ON_GOAL, Tiles.GOAL])}
+    problema = SearchProblem(p, initial, goal)
+    t = SearchTree(problema, 'a*', mapa)
+    return t
+
 if __name__=="__main__":
-    c=Client("localhost:8001", "student")
+    c=Client("localhost:8001", "ogrande")
     loop = asyncio.get_event_loop()
     SERVER = os.environ.get("SERVER", "localhost")
     PORT = os.environ.get("PORT", "8001")
@@ -75,12 +84,11 @@ if __name__=="__main__":
     loop.run_until_complete(c.agent_loop(f"{SERVER}:{PORT}", NAME))
 
     """
-    solver = sokobanSolver("levels/1.xsb")
+    solver = tester("levels/7.xsb")
     p = solver.search()
     print(p)
     if p is not None:
         plan = solver.get_plan(solver.solution)
         print(plan)
     """
-    
     
