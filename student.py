@@ -21,13 +21,11 @@ def sokobanSolver(filename):
         problema = SearchProblem(SokobanDomain(filename, strategy=strategy), initial, goal)
         tree = SearchTree(problema, strategy)
         sol = tree.search()
-        print("goal",goal,"\n")
-        tree.show()
         if sol is None:
             return []
         final = []
         for idx in tree.plan:
-            final += idx[2] + [idx[0]]
+            final += idx[1]
         return final
         
 
@@ -95,5 +93,6 @@ loop.run_until_complete(asyncio.gather(net_task, solver_task))
 loop.close()
 '''
 
-solution = sokobanSolver('levels/2.xsb')
-print(solution)
+
+solution = sokobanSolver('levels/8.xsb')
+print(solution)#'''
